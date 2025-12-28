@@ -1,0 +1,100 @@
+plugins {
+    id 'java-library'
+    id 'application'
+    id 'eclipse'
+    id 'maven-publish'
+    id 'signing'
+}
+
+def projectName = '_github_maamissiniva_distance-field-font'
+
+java.toolchain.languageVersion.set(JavaLanguageVersion.of(8))
+eclipse.project.name = projectName
+jar.archiveBaseName  = projectName
+
+application.mainClass = 'maamissiniva.distancefieldfont.DistanceFieldFont'
+
+group = 'io.github.maamissiniva'
+version = '0.1.0'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    // implementation 'com.badlogicgames.gdx:gdx:1.12+'
+    // implementation project(':maamissiniva:bitmap-font-descriptor') 
+    implementation 'io.github.maamissiniva:maamissiniva-bitmap-font-descriptor:0.1.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13+'
+    implementation 'org.slf4j:slf4j-api:1.7.30'
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
+
+    testImplementation 'junit:junit:4.13'
+}
+
+test {
+    testLogging {
+        // outputs.upToDateWhen {false}
+        showStandardStreams = true
+    }
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+def isReleaseVersion = !version.endsWith("SNAPSHOT")
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'Iterable'
+                description = '.'
+                url = 'https://github.com/maamissiniva/distance-field-font'
+                artifactId = 'maamissiniva-distance-field-font'
+                from components.java
+                licenses {
+                    license {
+                        name = 'GNU Lesser General Public License 3.0'
+                        url = 'https://www.gnu.org/licenses/lgpl-3.0.html'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'maamissiniva'
+                        name = 'Maam Issiniva'
+                        email = 'maamissiniva@gmail.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/maamissiniva/distance-field-font.git'
+                    developerConnection = 'scm:git:https://github.com/maamissiniva/distance-field-font.git'
+                    url = 'https://github.com/maamissiniva/distance-field-font'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            def releaseRepo  = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotRepo = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+            url = isReleaseVersion ? releaseRepo : snapshotRepo
+            credentials {
+                username = project.hasProperty('ossrhUsername') ? ossrhUsername : "Unknown user"
+                password = project.hasProperty('ossrhPassword') ? ossrhPassword : "Unknown password"
+            }
+        }
+    }
+    
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
+
+tasks.withType(Sign) {
+    onlyIf { isReleaseVersion }
+}
