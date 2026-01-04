@@ -3,19 +3,21 @@ plugins {
     id 'application'
     id 'eclipse'
     id 'maven-publish'
-    id 'signing'
+    id 'org.jreleaser' version '1.22.0'
 }
 
-def projectName = '_github_maamissiniva_distance-field-font'
+def mlGhBase                   = 'github.com/maamissiniva/distance-field-font'
+def mlArName                   = 'maamissiniva-distance-field-font'
+def mlDesc                     = 'Distance field font generation.'
+def mlYear                     = '2025'
 
-java.toolchain.languageVersion.set(JavaLanguageVersion.of(8))
-eclipse.project.name = projectName
-jar.archiveBaseName  = projectName
+eclipse.project.name           = '_github_maamissiniva_distance-field-font'
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+jar.archiveBaseName            = mlArName
+group                          = 'io.github.maamissiniva'
+version                        = '0.1.0'
 
 application.mainClass = 'maamissiniva.distancefieldfont.DistanceFieldFont'
-
-group = 'io.github.maamissiniva'
-version = '0.1.0'
 
 repositories {
     mavenLocal()
@@ -23,78 +25,95 @@ repositories {
 }
 
 dependencies {
-    // implementation 'com.badlogicgames.gdx:gdx:1.12+'
-    // implementation project(':maamissiniva:bitmap-font-descriptor') 
     implementation 'io.github.maamissiniva:maamissiniva-bitmap-font-descriptor:0.1.0'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13+'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:[2.13,)'
     implementation 'org.slf4j:slf4j-api:1.7.30'
     implementation 'ch.qos.logback:logback-classic:1.2.3'
 
     testImplementation 'junit:junit:4.13'
 }
 
-test {
-    testLogging {
-        // outputs.upToDateWhen {false}
-        showStandardStreams = true
-    }
-}
+//test {
+//    testLogging {
+//        showStandardStreams = true
+//    }
+//}
 
 java {
     withJavadocJar()
     withSourcesJar()
 }
 
-def isReleaseVersion = !version.endsWith("SNAPSHOT")
-
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        maven(MavenPublication) {
+            groupId    = group
+            artifactId = mlArName
+
+            from components.java
+
             pom {
-                name = 'Iterable'
-                description = '.'
-                url = 'https://github.com/maamissiniva/distance-field-font'
-                artifactId = 'maamissiniva-distance-field-font'
-                from components.java
+                name          = mlArName
+                description   = mlDesc
+                url           = "https://${mlGhBase}"
+                inceptionYear = mlYear
                 licenses {
                     license {
-                        name = 'GNU Lesser General Public License 3.0'
-                        url = 'https://www.gnu.org/licenses/lgpl-3.0.html'
+                        name = 'LGPL-2.1'
+                        url  = 'https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html'
                     }
                 }
                 developers {
                     developer {
-                        id = 'maamissiniva'
-                        name = 'Maam Issiniva'
+                        id    = 'maamissiniva'
+                        name  = 'Maamissiniva'
                         email = 'maamissiniva@gmail.com'
                     }
                 }
                 scm {
-                    connection = 'scm:git:https://github.com/maamissiniva/distance-field-font.git'
-                    developerConnection = 'scm:git:https://github.com/maamissiniva/distance-field-font.git'
-                    url = 'https://github.com/maamissiniva/distance-field-font'
+                    connection          = "scm:git:https://${mlGhBase}.git"
+                    developerConnection = "scm:git:ssh://${mlGhBase}.git"
+                    url                 = "https://${mlGhBase}"
                 }
             }
         }
     }
+
     repositories {
         maven {
-            def releaseRepo  = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-            def snapshotRepo = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-            url = isReleaseVersion ? releaseRepo : snapshotRepo
-            credentials {
-                username = project.hasProperty('ossrhUsername') ? ossrhUsername : "Unknown user"
-                password = project.hasProperty('ossrhPassword') ? ossrhPassword : "Unknown password"
+            url = layout.buildDirectory.dir('staging-deploy')
+        }
+    }
+}
+
+jreleaser {
+    signing {
+        pgp {
+            active = 'ALWAYS'
+            armored = true
+        }
+    }
+    deploy {
+        maven {
+            mavenCentral {
+                'release-deploy' {
+                    active = 'RELEASE'
+                    url    = 'https://central.sonatype.com/api/v1/publisher'
+                    stagingRepository('build/staging-deploy')
+                }
+            }
+            nexus2 {
+                'snapshot-deploy' {
+                    active                 = 'SNAPSHOT'
+                    snapshotUrl            = 'https://central.sonatype.com/repository/maven-snapshots/'
+                    applyMavenCentralRules = true
+                    snapshotSupported      = true
+                    closeRepository        = true
+                    releaseRepository      = true
+                    stagingRepository('build/staging-deploy')
+                }
             }
         }
     }
-    
 }
 
-signing {
-    sign publishing.publications.mavenJava
-}
-
-tasks.withType(Sign) {
-    onlyIf { isReleaseVersion }
-}

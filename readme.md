@@ -1,5 +1,11 @@
 # Distance field bitmap font generation
 
+## Dependency
+
+[maven central](https://central.sonatype.com/artifact/io.github.maamissiniva/maamissiniva-distance-field-font)
+
+## Description
+
 Uses java TTF loading to process a font and generate the distance field bitmap font.
 
 Naive implementation:
