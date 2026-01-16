@@ -137,8 +137,8 @@ public class DistanceFieldFont {
     
     static Graphics2D setupImage(BufferedImage i) {
         Graphics2D g = i.createGraphics();
-//        g.setColor(new Color(0, 0, 0, 0)); // maximum distance in all components.
-        g.setColor(Color.red); 
+        g.setColor(new Color(255, 255, 255, 0)); // maximum distance, white color
+//        g.setColor(Color.red); 
         g.fillRect(0, 0, i.getWidth(), i.getHeight());
         return g;
     }
@@ -233,7 +233,8 @@ public class DistanceFieldFont {
                     float py = gy + .5f;
                     float sd = signedDistance(px, py, spread, segments, ga); // [-spread,spread]
                     float cval = (sd + spread) / (cfg.spread + cfg.spread);
-                    Color col = new Color(cval, cval, cval, cval);
+                    // Color col = new Color(cval, cval, cval, cval);
+                    Color col = new Color(1f, 1f, 1f, cval);
                     int tx = glx + gx - minx;
                     int ty = gly + gy - miny;
                     distanceFieldImage.setRGB(tx, ty, col.getRGB());
